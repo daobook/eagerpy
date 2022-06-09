@@ -552,7 +552,7 @@ class Tensor(metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    def slogdet(matrix: TensorType) -> Tuple[TensorType, TensorType]:
+    def slogdet(self) -> Tuple[TensorType, TensorType]:
         ...
 
     @overload
@@ -623,8 +623,8 @@ class Tensor(metaclass=ABCMeta):
 
     @final
     def flatten(self: TensorType, start: int = 0, end: int = -1) -> TensorType:
-        start = start % self.ndim
-        end = end % self.ndim
+        start %= self.ndim
+        end %= self.ndim
         shape = self.shape[:start] + (-1,) + self.shape[end + 1 :]
         return self.reshape(shape)
 

@@ -198,7 +198,7 @@ class PyTorchTensor(BaseTensor):
     def minimum(self: TensorType, other: TensorOrScalar) -> TensorType:
         if isinstance(other, Tensor):
             other_ = other.raw
-        elif isinstance(other, int) or isinstance(other, float):
+        elif isinstance(other, (int, float)):
             other_ = torch.full_like(self.raw, other)
         else:
             raise TypeError(
@@ -209,7 +209,7 @@ class PyTorchTensor(BaseTensor):
     def maximum(self: TensorType, other: TensorOrScalar) -> TensorType:
         if isinstance(other, Tensor):
             other_ = other.raw
-        elif isinstance(other, int) or isinstance(other, float):
+        elif isinstance(other, (int, float)):
             other_ = torch.full_like(self.raw, other)
         else:
             raise TypeError(
@@ -466,17 +466,17 @@ class PyTorchTensor(BaseTensor):
         for p in paddings:
             if len(p) != 2:
                 raise ValueError("pad requires a tuple for each dimension")
-        if not (mode == "constant" or mode == "reflect"):
+        if mode not in {"constant", "reflect"}:
             raise ValueError("pad requires mode 'constant' or 'reflect'")
         if mode == "reflect":
             # PyTorch's pad has limited support for 'reflect' padding
-            if self.ndim != 3 and self.ndim != 4:
+            if self.ndim not in [3, 4]:
                 raise NotImplementedError  # pragma: no cover
             k = self.ndim - 2
             if paddings[:k] != ((0, 0),) * k:
                 raise NotImplementedError  # pragma: no cover
             paddings = paddings[k:]
-        paddings_ = list(x for p in reversed(paddings) for x in p)
+        paddings_ = [x for p in reversed(paddings) for x in p]
         return type(self)(
             torch.nn.functional.pad(self.raw, paddings_, mode=mode, value=value)
         )
@@ -536,19 +536,18 @@ class PyTorchTensor(BaseTensor):
             assert grad.shape == x.shape
             loss = loss.detach()
             loss = type(self)(loss)
-            if has_aux:
-                if isinstance(aux, PyTorchTensor):
-                    aux = PyTorchTensor(aux.raw.detach())
-                elif isinstance(aux, tuple):
-                    aux = tuple(
-                        PyTorchTensor(t.raw.detach())
-                        if isinstance(t, PyTorchTensor)
-                        else t
-                        for t in aux
-                    )
-                return loss, aux, grad
-            else:
+            if not has_aux:
                 return loss, grad
+            if isinstance(aux, PyTorchTensor):
+                aux = PyTorchTensor(aux.raw.detach())
+            elif isinstance(aux, tuple):
+                aux = tuple(
+                    PyTorchTensor(t.raw.detach())
+                    if isinstance(t, PyTorchTensor)
+                    else t
+                    for t in aux
+                )
+            return loss, aux, grad
 
         return value_and_grad
 
@@ -580,11 +579,8 @@ class PyTorchTensor(BaseTensor):
 
         if isinstance(x, Tensor):
             x_ = x.raw
-        elif isinstance(x, int) or isinstance(x, float):
-            if isinstance(y, Tensor):
-                dtype = y.raw.dtype
-            else:
-                dtype = torch.float32
+        elif isinstance(x, (int, float)):
+            dtype = y.raw.dtype if isinstance(y, Tensor) else torch.float32
             x_ = torch.full_like(self.raw, x, dtype=dtype)
         else:
             raise TypeError(
@@ -592,11 +588,8 @@ class PyTorchTensor(BaseTensor):
             )  # pragma: no cover
         if isinstance(y, Tensor):
             y_ = y.raw
-        elif isinstance(y, int) or isinstance(y, float):
-            if isinstance(x, Tensor):
-                dtype = x.raw.dtype
-            else:
-                dtype = torch.float32
+        elif isinstance(y, (int, float)):
+            dtype = x.raw.dtype if isinstance(x, Tensor) else torch.float32
             y_ = torch.full_like(self.raw, y, dtype=dtype)
         return type(self)(torch.where(self.raw, x_, y_))
 
