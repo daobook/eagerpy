@@ -28,12 +28,12 @@ class BaseTensor(Tensor):
     @final
     def __repr__(self: TensorType) -> str:
         lines = repr(self.raw).split("\n")
-        prefix = self.__class__.__name__ + "("
+        prefix = f"{self.__class__.__name__}("
         lines[0] = prefix + lines[0]
         prefix = " " * len(prefix)
         for i in range(1, len(lines)):
             lines[i] = prefix + lines[i]
-        lines[-1] = lines[-1] + ")"
+        lines[-1] = f"{lines[-1]})"
         return "\n".join(lines)
 
     @final

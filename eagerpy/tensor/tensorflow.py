@@ -335,7 +335,7 @@ class TensorFlowTensor(BaseTensor):
 
         x = self.raw
         if isinstance(indices, int):
-            if isinstance(values_, int) or isinstance(values_, float):
+            if isinstance(values_, (int, float)):
                 values_ = tf.fill(x.shape[-1:], values_)
             return type(self)(
                 tf.tensor_scatter_nd_update(x, [[indices]], values_[None])
@@ -344,17 +344,16 @@ class TensorFlowTensor(BaseTensor):
             isinstance(idx, slice) for idx in indices
         ):
             if (
-                len(indices) == x.ndim == 2
-                and indices[0] == index[:]
-                and not isinstance(indices[1], slice)
+                not len(indices) == x.ndim == 2
+                or indices[0] != index[:]
+                or isinstance(indices[1], slice)
             ):
-                x = tf.transpose(x)
-                if isinstance(values_, int) or isinstance(values_, float):
-                    values_ = tf.fill(x.shape[-1:], values_)
-                result = tf.tensor_scatter_nd_update(x, [[indices[-1]]], values_[None])
-                return type(self)(tf.transpose(result))
-            else:
                 raise NotImplementedError  # pragma: no cover
+            x = tf.transpose(x)
+            if isinstance(values_, (int, float)):
+                values_ = tf.fill(x.shape[-1:], values_)
+            result = tf.tensor_scatter_nd_update(x, [[indices[-1]]], values_[None])
+            return type(self)(tf.transpose(result))
         elif isinstance(indices, tuple):
             if all(idx.dtype in [tf.int32, tf.int64] for idx in indices):
                 indices = [
@@ -362,7 +361,7 @@ class TensorFlowTensor(BaseTensor):
                     for idx in indices
                 ]
             indices = tf.stack(indices, axis=-1)
-            if isinstance(values_, int) or isinstance(values_, float):
+            if isinstance(values_, (int, float)):
                 values_ = tf.fill((indices.shape[0],), values_)
             return type(self)(tf.tensor_scatter_nd_update(x, indices, values_))
         else:
@@ -413,11 +412,11 @@ class TensorFlowTensor(BaseTensor):
         for p in paddings:
             if len(p) != 2:
                 raise ValueError("pad requires a tuple for each dimension")
-        if not (mode == "constant" or mode == "reflect"):
+        if mode not in {"constant", "reflect"}:
             raise ValueError("pad requires mode 'constant' or 'reflect'")
         if mode == "reflect":
             # PyTorch's pad has limited support for 'reflect' padding
-            if self.ndim != 3 and self.ndim != 4:
+            if self.ndim not in [3, 4]:
                 raise NotImplementedError  # pragma: no cover
             k = self.ndim - 2
             if paddings[:k] != ((0, 0),) * k:
@@ -479,10 +478,7 @@ class TensorFlowTensor(BaseTensor):
             grad = tape.gradient(loss.raw, x_.raw)
             grad = TensorFlowTensor(grad)
             assert grad.shape == x_.shape
-            if has_aux:
-                return loss, aux, grad
-            else:
-                return loss, grad
+            return (loss, aux, grad) if has_aux else (loss, grad)
 
         return value_and_grad
 

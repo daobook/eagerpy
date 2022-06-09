@@ -24,9 +24,10 @@ class ExtensionMeta(type):
             # creating a subclass of ExtensionMethods
             # wrap the attributes with extensionmethod
             attrs = {
-                k: extensionmethod(v) if not k.startswith("__") else v
+                k: v if k.startswith("__") else extensionmethod(v)
                 for k, v in attrs.items()
             }
+
         return super().__new__(cls, name, bases, attrs)
 
 

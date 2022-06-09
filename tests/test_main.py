@@ -455,7 +455,7 @@ def compare_all(f: Callable[..., Tensor]) -> Callable[..., None]:
 
     @functools.wraps(f)
     def test_fn(*args: Any, **kwargs: Any) -> None:
-        assert len(args) == 0
+        assert not args
         nkwargs = get_numpy_kwargs(kwargs)
         t = f(*args, **kwargs)
         n = f(*args, **nkwargs)
@@ -473,7 +473,7 @@ def compare_allclose(*args: Any, rtol: float = 1e-07, atol: float = 0) -> Callab
     def compare_allclose_inner(f: Callable[..., Tensor]) -> Callable[..., None]:
         @functools.wraps(f)
         def test_fn(*args: Any, **kwargs: Any) -> None:
-            assert len(args) == 0
+            assert not args
             nkwargs = get_numpy_kwargs(kwargs)
             t = f(*args, **kwargs)
             n = f(*args, **nkwargs)
@@ -497,7 +497,7 @@ def compare_equal(
 
     @functools.wraps(f)
     def test_fn(*args: Any, **kwargs: Any) -> None:
-        assert len(args) == 0
+        assert not args
         nkwargs = get_numpy_kwargs(kwargs)
         t = f(*args, **kwargs)
         n = f(*args, **nkwargs)
@@ -526,7 +526,7 @@ def test_len(t: Tensor) -> int:
 
 @compare_equal
 def test_scalar_bool(t: Tensor) -> bool:
-    return bool(ep.sum(t) == 0)
+    return ep.sum(t) == 0
 
 
 @compare_all
@@ -1417,7 +1417,7 @@ def test_crossentropy(dummy: Tensor) -> Tensor:
 @compare_allclose
 def test_slogdet(dummy: Tensor, array: Tensor, output: str) -> Tensor:
     a = ep.from_numpy(dummy, array).float32()
-    outputs = dict()
+    outputs = {}
     outputs["sign"], outputs["logdet"] = ep.slogdet(a)
     return outputs[output]
 
@@ -1555,7 +1555,7 @@ def test_lt(t1: Tensor, t2: Tensor) -> Tensor:
 
 @compare_all
 def test_lt_scalar(t1: Tensor, t2: Tensor) -> Tensor:
-    return 3 < t2
+    return t2 > 3
 
 
 @compare_all
@@ -1565,7 +1565,7 @@ def test_le(t1: Tensor, t2: Tensor) -> Tensor:
 
 @compare_all
 def test_le_scalar(t1: Tensor, t2: Tensor) -> Tensor:
-    return 3 <= t2
+    return t2 >= 3
 
 
 @compare_all
@@ -1575,7 +1575,7 @@ def test_gt(t1: Tensor, t2: Tensor) -> Tensor:
 
 @compare_all
 def test_gt_scalar(t1: Tensor, t2: Tensor) -> Tensor:
-    return 3 > t2
+    return t2 < 3
 
 
 @compare_all
@@ -1585,7 +1585,7 @@ def test_ge(t1: Tensor, t2: Tensor) -> Tensor:
 
 @compare_all
 def test_ge_scalar(t1: Tensor, t2: Tensor) -> Tensor:
-    return 3 >= t2
+    return t2 <= 3
 
 
 @compare_all
@@ -1595,7 +1595,7 @@ def test_eq(t1: Tensor, t2: Tensor) -> Tensor:
 
 @compare_all
 def test_eq_scalar(t1: Tensor, t2: Tensor) -> Tensor:
-    return cast(Tensor, 3 == t2)
+    return cast(Tensor, t2 == 3)
 
 
 @compare_all
@@ -1605,7 +1605,7 @@ def test_ne(t1: Tensor, t2: Tensor) -> Tensor:
 
 @compare_all
 def test_ne_scalar(t1: Tensor, t2: Tensor) -> Tensor:
-    return cast(Tensor, 3 != t2)
+    return cast(Tensor, t2 != 3)
 
 
 @compare_all

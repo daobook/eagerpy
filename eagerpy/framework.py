@@ -125,9 +125,7 @@ def minimum(x: TensorOrScalar, y: TensorType) -> TensorType:
 
 
 def minimum(x: TensorOrScalar, y: TensorOrScalar) -> Tensor:
-    if not isinstance(x, Tensor):
-        return cast(Tensor, y).minimum(x)
-    return x.minimum(y)
+    return x.minimum(y) if isinstance(x, Tensor) else cast(Tensor, y).minimum(x)
 
 
 @overload
@@ -141,9 +139,7 @@ def maximum(x: TensorOrScalar, y: TensorType) -> TensorType:
 
 
 def maximum(x: TensorOrScalar, y: TensorOrScalar) -> Tensor:
-    if not isinstance(x, Tensor):
-        return cast(Tensor, y).maximum(x)
-    return x.maximum(y)
+    return x.maximum(y) if isinstance(x, Tensor) else cast(Tensor, y).maximum(x)
 
 
 def argmin(t: TensorType, axis: Optional[int] = None) -> TensorType:
@@ -226,9 +222,11 @@ def logical_and(x: TensorOrScalar, y: TensorType) -> TensorType:
 
 
 def logical_and(x: TensorOrScalar, y: TensorOrScalar) -> Tensor:
-    if not isinstance(x, Tensor):
-        return cast(Tensor, y).logical_and(x)
-    return x.logical_and(y)
+    return (
+        x.logical_and(y)
+        if isinstance(x, Tensor)
+        else cast(Tensor, y).logical_and(x)
+    )
 
 
 @overload
@@ -242,9 +240,11 @@ def logical_or(x: TensorOrScalar, y: TensorType) -> TensorType:
 
 
 def logical_or(x: TensorOrScalar, y: TensorOrScalar) -> Tensor:
-    if not isinstance(x, Tensor):
-        return cast(Tensor, y).logical_or(x)
-    return x.logical_or(y)
+    return (
+        x.logical_or(y)
+        if isinstance(x, Tensor)
+        else cast(Tensor, y).logical_or(x)
+    )
 
 
 def logical_not(t: TensorType) -> TensorType:

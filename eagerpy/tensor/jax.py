@@ -370,21 +370,19 @@ class JAXTensor(BaseTensor):
         for p in paddings:
             if len(p) != 2:
                 raise ValueError("pad requires a tuple for each dimension")
-        if not (mode == "constant" or mode == "reflect"):
+        if mode not in {"constant", "reflect"}:
             raise ValueError("pad requires mode 'constant' or 'reflect'")
-        if mode == "reflect":
-            # PyTorch's pad has limited support for 'reflect' padding
-            if self.ndim != 3 and self.ndim != 4:
-                raise NotImplementedError  # pragma: no cover
-            k = self.ndim - 2
-            if paddings[:k] != ((0, 0),) * k:
-                raise NotImplementedError  # pragma: no cover
         if mode == "constant":
             return type(self)(
                 jnp.pad(self.raw, paddings, mode=mode, constant_values=value)
             )
-        else:
-            return type(self)(jnp.pad(self.raw, paddings, mode=mode))
+            # PyTorch's pad has limited support for 'reflect' padding
+        if self.ndim not in [3, 4]:
+            raise NotImplementedError  # pragma: no cover
+        k = self.ndim - 2
+        if paddings[:k] != ((0, 0),) * k:
+            raise NotImplementedError  # pragma: no cover
+        return type(self)(jnp.pad(self.raw, paddings, mode=mode))
 
     def isnan(self: TensorType) -> TensorType:
         return type(self)(jnp.isnan(self.raw))
